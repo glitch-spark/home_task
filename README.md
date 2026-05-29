@@ -65,7 +65,7 @@ Open [http://localhost:3000](http://localhost:3000) → redirects to `/applicati
 - **Manual notes excluded from grounding:** Notes are scanned by guardrails but not passed into the LLM context, so the agent cannot factor in manager context when re-running a review.
 - **Heuristic injection guard:** Pattern matching blocks obvious prompt-injection attempts but is not a substitute for full input/output moderation or a dedicated security layer.
 - **No authentication:** Assumes a trusted internal tool. A production deployment would need auth (e.g. SSO, magic link, or Render private networking).
-- **Manual production seed:** After first Render deploy, seed data is applied via Shell (`npm run db:seed`) rather than an idempotent bootstrap step in the start command.
+- **Production bootstrap seed:** On Render, `start:render` runs an idempotent seed when the database has no campaigns (no Shell required on free tier). Use `npm run db:seed` locally for a full reset.
 - **Prisma env file:** Prisma CLI reads `.env`, not `.env.local`. For local dev, copy or symlink: `cp .env.local .env`.
 
 ## What I would improve with more time
@@ -106,10 +106,7 @@ The app must be live on Render with PostgreSQL (take-home requirement). Use the 
 3. Render creates:
    - **Web Service** `creator-intake-review` (Node 20)
    - **PostgreSQL** `creator-intake-db`
-4. After the first deploy, open the web service **Shell** and run once:
-   ```bash
-   npm run db:seed
-   ```
+4. After the first deploy, the app auto-seeds on startup if the database is empty (no Render Shell needed on free tier). To reset locally: `npm run db:seed`.
 5. Copy the web service **URL** for submission (e.g. `https://creator-intake-review.onrender.com`).
 
 ### Option B — Manual setup
@@ -136,7 +133,7 @@ Copy the **Internal Database URL** (used by the web service in the same region).
 | **Start command** | `npm run start:render` |
 | Health check path | `/api/health` |
 
-`start:render` runs `prisma migrate deploy` then `next start` so the schema is applied on every deploy.
+`start:render` runs `prisma migrate deploy`, idempotent seed if empty, then `next start`.
 
 **3. Environment variables**
 
@@ -154,16 +151,9 @@ If Prisma cannot connect, append SSL to the URL (common with external URLs):
 ?sslmode=require
 ```
 
-**4. Seed production data (one time)**
+**4. Verify**
 
-Render Dashboard → your web service → **Shell**:
-
-```bash
-npm run db:seed
-```
-
-**5. Verify**
-
+- First deploy auto-seeds when the DB has no campaigns (free tier — no Shell required).
 - `GET https://<your-app>.onrender.com/api/health` → `{ "status": "healthy" }`
 - Open `https://<your-app>.onrender.com/applications` → dashboard with seeded creators
 
