@@ -23,7 +23,12 @@
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",
+    "@types/node": "^20.17.57",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.4.21",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
     "next": "^14.2.35",
     "postcss": "^8.5.4",
     "prisma": "^6.9.0",
@@ -36,11 +41,6 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
-    "@types/node": "^20.17.57",
-    "@types/react": "^18.3.23",
-    "@types/react-dom": "^18.3.7",
-    "dotenv": "^16.6.1",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.35"
+    "dotenv": "^16.6.1"
   }
 }
