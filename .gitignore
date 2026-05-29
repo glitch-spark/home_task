@@ -216,3 +216,20 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Next.js / Node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# Env (secrets)
+.env
+.env*.local
+
+# Prisma local DB artifacts
+*.db
+*.db-journal
+
+# Allow Next.js src/lib (Python template ignores lib/ globally)
+!src/lib/

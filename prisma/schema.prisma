@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ApplicationStatus {
+  pending
+  approved
+  rejected
+  needs_info
+}
+
+enum AgentRecommendation {
+  approve
+  reject
+  needs_info
+  manual_review
+}
+
+enum AgentRunStatus {
+  success
+  failed
+}
+
+model Campaign {
+  id               String   @id @default(cuid())
+  brandName        String
+  campaignName     String
+  campaignGoal     String   @db.Text
+  targetAudience   String   @db.Text
+  platforms        String[]
+  budgetRange      String
+  requirements     String[]
+  brandSafetyNotes String   @db.Text
+  createdAt        DateTime @default(now())
+
+  applications CreatorApplication[]
+
+  @@index([createdAt])
+}
+
+model CreatorApplication {
+  id                 String            @id @default(cuid())
+  campaignId         String
+  creatorName        String
+  handle             String
+  platform           String
+  followers          Int
+  engagementRate     Float
+  audienceSummary    String            @db.Text
+  contentStyle       String            @db.Text
+  applicationMessage String            @db.Text
+  pastBrandDeals     String[]
+  status             ApplicationStatus @default(pending)
+  manualNote         String?           @db.Text
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  campaign Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  reviews  AgentReview[]
+  runs     AgentRun[]
+
+  @@index([campaignId])
+  @@index([status])
+  @@index([platform])
+  @@index([followers])
+  @@index([campaignId, status])
+}
+
+model AgentReview {
+  id             String              @id @default(cuid())
+  applicationId  String
+  fitScore       Int
+  recommendation AgentRecommendation
+  reasoning      String              @db.Text
+  risks          String[]
+  missingInfo    String[]
+  suggestedReply String              @db.Text
+  createdAt      DateTime            @default(now())
+
+  application CreatorApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  run         AgentRun?
+
+  @@index([applicationId, createdAt(sort: Desc)])
+}
+
+model AgentRun {
+  id            String         @id @default(cuid())
+  applicationId String
+  status        AgentRunStatus
+  rawInput      Json
+  rawOutput     Json?
+  errorMessage  String?        @db.Text
+  createdAt     DateTime       @default(now())
+  reviewId      String?        @unique
+
+  application CreatorApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  review      AgentReview?       @relation(fields: [reviewId], references: [id], onDelete: SetNull)
+
+  @@index([applicationId, createdAt(sort: Desc)])
+}
