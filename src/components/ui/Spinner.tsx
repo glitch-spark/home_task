@@ -8,6 +8,7 @@ export function Spinner({ className }: { className?: string }) {
         className
       )}
       role="status"
+      aria-live="polite"
       aria-label="Loading"
     />
   );

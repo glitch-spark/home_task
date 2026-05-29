@@ -1,10 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import Link from "next/link";
+import { GlowPopMark } from "@/components/brand/AppLogo";
 import { RecommendationBadge } from "@/components/applications/RecommendationBadge";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { Button } from "@/components/ui/Button";
+import { CreatorAvatar } from "@/components/ui/CreatorAvatar";
+import { FitScoreRing } from "@/components/ui/FitScoreRing";
+import {
+  IconChevronLeft,
+  IconHistory,
+  IconMegaphone,
+  IconMessage,
+  IconNote,
+  IconSparkles,
+  IconUsers,
+  PlatformIcon,
+} from "@/components/ui/Icons";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { EmptyState, ErrorState } from "@/components/ui/StateMessage";
 import { Spinner } from "@/components/ui/Spinner";
 import {
@@ -16,24 +30,8 @@ import { formatDateTime, formatEngagement, formatFollowers } from "@/lib/format"
 import type { ApplicationDetail } from "@/types/domain";
 import type { ApplicationStatus } from "@prisma/client";
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-        {title}
-      </h2>
-      <div className="mt-4">{children}</div>
-    </section>
-  );
-}
-
 export function ApplicationDetailView({ id }: { id: string }) {
+  const noteFieldId = useId();
   const [app, setApp] = useState<ApplicationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,7 +111,7 @@ export function ApplicationDetailView({ id }: { id: string }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-24">
+      <div className="flex justify-center py-24" aria-live="polite">
         <Spinner />
       </div>
     );
@@ -136,73 +134,87 @@ export function ApplicationDetailView({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+      <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-card">
+        <div className="bg-gradient-to-br from-brand-light/80 via-white to-white px-5 py-6 sm:px-8 sm:py-8">
           <Link
             href="/applications"
-            className="text-sm font-medium text-brand hover:underline"
+            className="inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-brand-foreground hover:text-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
           >
-            ← Back to applications
+            <IconChevronLeft className="h-4 w-4" />
+            Back to applications
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
-            {app.creatorName}
-          </h1>
-          <p className="text-slate-600">
-            {app.handle} · {app.platform}
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <StatusBadge status={app.status} />
-            {review && (
-              <RecommendationBadge recommendation={review.recommendation} />
-            )}
-          </div>
-        </div>
 
-        <div className="flex flex-col gap-2 sm:items-end">
-          <Button
-            size="lg"
-            loading={actionLoading === "review"}
-            onClick={handleRunReview}
-            className="w-full sm:w-auto"
-          >
-            Run AI Review
-          </Button>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              loading={actionLoading === "approved"}
-              onClick={() => updateStatus("approved")}
-            >
-              Approve
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              loading={actionLoading === "rejected"}
-              onClick={() => updateStatus("rejected")}
-            >
-              Reject
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              loading={actionLoading === "needs_info"}
-              onClick={() => updateStatus("needs_info")}
-            >
-              Needs info
-            </Button>
+          <div className="mt-5 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex items-start gap-4">
+              <CreatorAvatar name={app.creatorName} size="xl" />
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+                  {app.creatorName}
+                </h1>
+                <p className="mt-1 text-slate-600">{app.handle}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <PlatformIcon platform={app.platform} showLabel />
+                  <StatusBadge status={app.status} />
+                  {review && (
+                    <RecommendationBadge recommendation={review.recommendation} />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex w-full flex-col gap-2 sm:w-auto lg:items-end">
+              <Button
+                size="lg"
+                loading={actionLoading === "review"}
+                onClick={handleRunReview}
+                className="w-full shadow-brand sm:w-auto"
+              >
+                <IconSparkles className="h-4 w-4" />
+                Run AI Review
+              </Button>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label="Update application status"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  loading={actionLoading === "approved"}
+                  onClick={() => updateStatus("approved")}
+                >
+                  Approve
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  loading={actionLoading === "rejected"}
+                  onClick={() => updateStatus("rejected")}
+                >
+                  Reject
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  loading={actionLoading === "needs_info"}
+                  onClick={() => updateStatus("needs_info")}
+                >
+                  Needs info
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {banner && (
         <div
-          role="status"
+          role={banner.type === "error" ? "alert" : "status"}
+          aria-live={banner.type === "error" ? "assertive" : "polite"}
           className={
             banner.type === "success"
-              ? "rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
-              : "rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+              ? "rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+              : "rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
           }
         >
           {banner.text}
@@ -210,61 +222,118 @@ export function ApplicationDetailView({ id }: { id: string }) {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Section title="Creator profile">
-          <dl className="grid gap-3 text-sm sm:grid-cols-2">
-            <div>
-              <dt className="text-slate-500">Followers</dt>
-              <dd className="font-medium tabular-nums">
+        <SectionCard
+          title="Creator profile"
+          icon={<IconUsers className="h-4 w-4" />}
+        >
+          <dl className="grid gap-4 text-sm sm:grid-cols-2">
+            <div className="rounded-xl bg-slate-50 px-4 py-3">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                Followers
+              </dt>
+              <dd className="mt-1 text-lg font-semibold tabular-nums text-slate-900">
                 {formatFollowers(app.followers)}
               </dd>
             </div>
-            <div>
-              <dt className="text-slate-500">Engagement</dt>
-              <dd className="font-medium tabular-nums">
+            <div className="rounded-xl bg-slate-50 px-4 py-3">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                Engagement
+              </dt>
+              <dd className="mt-1 text-lg font-semibold tabular-nums text-slate-900">
                 {formatEngagement(app.engagementRate)}
               </dd>
             </div>
             <div className="sm:col-span-2">
-              <dt className="text-slate-500">Audience</dt>
-              <dd className="mt-1 text-slate-800">{app.audienceSummary}</dd>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                Audience
+              </dt>
+              <dd className="mt-1 leading-relaxed text-slate-800">
+                {app.audienceSummary}
+              </dd>
             </div>
             <div className="sm:col-span-2">
-              <dt className="text-slate-500">Content style</dt>
-              <dd className="mt-1 text-slate-800">{app.contentStyle}</dd>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                Content style
+              </dt>
+              <dd className="mt-1 leading-relaxed text-slate-800">
+                {app.contentStyle}
+              </dd>
             </div>
             <div className="sm:col-span-2">
-              <dt className="text-slate-500">Past brand deals</dt>
-              <dd className="mt-1 text-slate-800">
-                {app.pastBrandDeals.length > 0
-                  ? app.pastBrandDeals.join(", ")
-                  : "None listed"}
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                Past brand deals
+              </dt>
+              <dd className="mt-2 flex flex-wrap gap-2">
+                {app.pastBrandDeals.length > 0 ? (
+                  app.pastBrandDeals.map((deal) => (
+                    <span
+                      key={deal}
+                      className="rounded-full bg-brand-light px-3 py-1 text-xs font-medium text-brand-hover ring-1 ring-brand/15"
+                    >
+                      {deal}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-slate-500">None listed</span>
+                )}
               </dd>
             </div>
           </dl>
-        </Section>
+        </SectionCard>
 
-        <Section title="Campaign context">
-          <p className="text-lg font-semibold text-slate-900">
-            {app.campaign.brandName} — {app.campaign.campaignName}
-          </p>
-          <p className="mt-2 text-sm text-slate-700">{app.campaign.campaignGoal}</p>
-          <ul className="mt-3 list-inside list-disc text-sm text-slate-600">
-            <li>Audience: {app.campaign.targetAudience}</li>
-            <li>Platforms: {app.campaign.platforms.join(", ")}</li>
-            <li>Budget: {app.campaign.budgetRange}</li>
+        <SectionCard
+          title="Campaign context"
+          icon={<IconMegaphone className="h-4 w-4" />}
+        >
+          <div className="flex items-start gap-3">
+            <GlowPopMark className="h-12 w-12 shrink-0" />
+            <div>
+              <p className="text-lg font-semibold text-slate-900">
+                {app.campaign.brandName} — {app.campaign.campaignName}
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                {app.campaign.campaignGoal}
+              </p>
+            </div>
+          </div>
+          <ul className="mt-4 space-y-2 text-sm text-slate-600">
+            <li className="rounded-lg bg-slate-50 px-3 py-2">
+              <span className="font-medium text-slate-700">Audience: </span>
+              {app.campaign.targetAudience}
+            </li>
+            <li className="rounded-lg bg-slate-50 px-3 py-2">
+              <span className="font-medium text-slate-700">Platforms: </span>
+              {app.campaign.platforms.join(", ")}
+            </li>
+            <li className="rounded-lg bg-slate-50 px-3 py-2">
+              <span className="font-medium text-slate-700">Budget: </span>
+              {app.campaign.budgetRange}
+            </li>
           </ul>
-        </Section>
+        </SectionCard>
 
-        <Section title="Application message">
-          <p className="text-slate-800">{app.applicationMessage}</p>
-        </Section>
+        <SectionCard
+          title="Application message"
+          icon={<IconMessage className="h-4 w-4" />}
+        >
+          <blockquote className="rounded-xl border-l-4 border-brand bg-brand-light/50 px-4 py-3 italic text-slate-800">
+            &ldquo;{app.applicationMessage}&rdquo;
+          </blockquote>
+        </SectionCard>
 
-        <Section title="Manual note">
+        <SectionCard
+          title="Manual note"
+          icon={<IconNote className="h-4 w-4" />}
+        >
+          <label htmlFor={noteFieldId} className="sr-only">
+            Manual note for campaign manager
+          </label>
           <textarea
+            id={noteFieldId}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={4}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
+            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm shadow-sm transition-colors focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
             placeholder="Add notes for the campaign manager…"
           />
           <Button
@@ -275,29 +344,31 @@ export function ApplicationDetailView({ id }: { id: string }) {
           >
             Save manual note
           </Button>
-        </Section>
+        </SectionCard>
       </div>
 
-      <Section title="Latest AI recommendation">
+      <SectionCard
+        title="Latest AI recommendation"
+        icon={<IconSparkles className="h-4 w-4" />}
+      >
         {review ? (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-3xl font-bold tabular-nums text-slate-900">
-                {review.fitScore}
-                <span className="text-lg font-normal text-slate-500">/10</span>
-              </span>
-              <RecommendationBadge recommendation={review.recommendation} />
-              <span className="text-xs text-slate-500">
-                {formatDateTime(review.createdAt)}
-              </span>
-            </div>
-            <p className="text-slate-800">{review.reasoning}</p>
-            {review.risks.length > 0 && (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center gap-4">
+              <FitScoreRing score={review.fitScore} size="lg" />
               <div>
-                <p className="text-xs font-semibold uppercase text-slate-500">
+                <RecommendationBadge recommendation={review.recommendation} />
+                <p className="mt-2 text-xs text-slate-500">
+                  Reviewed {formatDateTime(review.createdAt)}
+                </p>
+              </div>
+            </div>
+            <p className="leading-relaxed text-slate-800">{review.reasoning}</p>
+            {review.risks.length > 0 && (
+              <div className="rounded-xl border border-amber-200/80 bg-amber-50/80 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">
                   Risks
                 </p>
-                <ul className="mt-1 list-inside list-disc text-sm text-slate-700">
+                <ul className="mt-2 space-y-1 text-sm text-amber-950">
                   {review.risks.map((r) => (
                     <li key={r}>{r}</li>
                   ))}
@@ -305,11 +376,11 @@ export function ApplicationDetailView({ id }: { id: string }) {
               </div>
             )}
             {review.missingInfo.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold uppercase text-slate-500">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
                   Missing info
                 </p>
-                <ul className="mt-1 list-inside list-disc text-sm text-slate-700">
+                <ul className="mt-2 space-y-1 text-sm text-slate-700">
                   {review.missingInfo.map((m) => (
                     <li key={m}>{m}</li>
                   ))}
@@ -317,10 +388,10 @@ export function ApplicationDetailView({ id }: { id: string }) {
               </div>
             )}
             <div>
-              <p className="text-xs font-semibold uppercase text-slate-500">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Suggested reply
               </p>
-              <p className="mt-1 rounded-lg bg-slate-50 p-3 text-sm text-slate-800">
+              <p className="mt-2 rounded-xl border border-brand/15 bg-brand-light/40 p-4 text-sm leading-relaxed text-slate-800">
                 {review.suggestedReply}
               </p>
             </div>
@@ -333,9 +404,12 @@ export function ApplicationDetailView({ id }: { id: string }) {
             onAction={handleRunReview}
           />
         )}
-      </Section>
+      </SectionCard>
 
-      <Section title="Agent run history">
+      <SectionCard
+        title="Agent run history"
+        icon={<IconHistory className="h-4 w-4" />}
+      >
         {app.runs.length === 0 ? (
           <p className="text-sm text-slate-500">No agent runs recorded yet.</p>
         ) : (
@@ -345,17 +419,23 @@ export function ApplicationDetailView({ id }: { id: string }) {
                 key={run.id}
                 className="flex flex-col gap-1 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
+                <div className="flex items-center gap-2">
                   <span
                     className={
                       run.status === "success"
-                        ? "font-medium text-emerald-700"
-                        : "font-medium text-red-700"
+                        ? "inline-flex items-center gap-1.5 font-medium text-emerald-700"
+                        : "inline-flex items-center gap-1.5 font-medium text-red-700"
                     }
                   >
+                    <span
+                      className={`h-2 w-2 rounded-full ${
+                        run.status === "success" ? "bg-emerald-500" : "bg-red-500"
+                      }`}
+                      aria-hidden="true"
+                    />
                     {run.status}
                   </span>
-                  <span className="ml-2 text-slate-500">
+                  <span className="text-slate-500">
                     {formatDateTime(run.createdAt)}
                   </span>
                 </div>
@@ -368,7 +448,7 @@ export function ApplicationDetailView({ id }: { id: string }) {
             ))}
           </ul>
         )}
-      </Section>
+      </SectionCard>
     </div>
   );
 }

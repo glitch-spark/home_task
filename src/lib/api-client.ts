@@ -1,5 +1,5 @@
 import type { ApiResponse, ApplicationSortField, SortOrder } from "@/types";
-import type { ApplicationDetail, ApplicationListItem } from "@/types/domain";
+import type { ApplicationDetail, ApplicationListItem, CampaignSummary } from "@/types/domain";
 import type { AgentReview } from "@prisma/client";
 import type { AgentRunSummary } from "@/types/domain";
 
@@ -24,9 +24,11 @@ export async function listApplications(params: {
   const res = await fetch(`/api/applications?${qs.toString()}`, {
     cache: "no-store",
   });
-  return parseResponse<{ campaignId: string; applications: ApplicationListItem[] }>(
-    res
-  );
+  return parseResponse<{
+    campaignId: string;
+    campaign: CampaignSummary | null;
+    applications: ApplicationListItem[];
+  }>(res);
 }
 
 export async function getApplication(id: string) {

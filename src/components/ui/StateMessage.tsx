@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import { IconAlertCircle, IconInbox } from "@/components/ui/Icons";
 
 interface StateMessageProps {
   title: string;
@@ -14,10 +15,15 @@ export function EmptyState({
   onAction,
 }: StateMessageProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-card">
+      <span className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-light text-brand-foreground">
+        <IconInbox className="h-7 w-7" />
+      </span>
       <p className="text-lg font-semibold text-slate-900">{title}</p>
       {description && (
-        <p className="mt-2 max-w-md text-sm text-slate-600">{description}</p>
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-600">
+          {description}
+        </p>
       )}
       {actionLabel && onAction && (
         <Button className="mt-6" onClick={onAction}>
@@ -36,9 +42,13 @@ export function ErrorState({
 }: StateMessageProps) {
   return (
     <div
-      className="rounded-xl border border-red-200 bg-red-50 px-6 py-8 text-center"
+      className="rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-center shadow-card"
       role="alert"
+      aria-live="assertive"
     >
+      <span className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 text-red-700">
+        <IconAlertCircle className="h-6 w-6" />
+      </span>
       <p className="font-semibold text-red-900">{title}</p>
       {description && (
         <p className="mt-2 text-sm text-red-800">{description}</p>

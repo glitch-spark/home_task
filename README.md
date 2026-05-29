@@ -56,6 +56,28 @@ Open [http://localhost:3000](http://localhost:3000) → redirects to `/applicati
 - **Grounding:** Campaign + application data are serialized from PostgreSQL into delimited `<campaign_context>` / `<application_context>` blocks; the model is instructed to use only those facts.
 - **Security (ai-security):** `OPENAI_API_KEY` is server-only (`src/lib/llm.ts` + `import "server-only"`). User text is scanned for injection patterns before the LLM call; per-application review cooldown; no agent tools beyond structured JSON emission.
 
+## Known tradeoffs
+
+- **Single-campaign scope:** The dashboard defaults to the first seeded campaign when `campaignId` is omitted. There is no campaign picker UI yet.
+- **Fit-score sorting in memory:** Sorting by `fitScore` happens in the service layer after fetching rows (because the score lives on `AgentReview`, not `CreatorApplication`). Fine for seeded data; would move to a SQL join or materialized latest-review column at scale.
+- **In-memory review cooldown:** The 15s per-application rate limit uses a process-local `Map`, so it resets on deploy/restart and does not coordinate across multiple app instances.
+- **Latest review only in UI:** The detail page shows the most recent AI review. `GET /api/applications/[id]/reviews` returns full history but is not wired into the frontend.
+- **Manual notes excluded from grounding:** Notes are scanned by guardrails but not passed into the LLM context, so the agent cannot factor in manager context when re-running a review.
+- **Heuristic injection guard:** Pattern matching blocks obvious prompt-injection attempts but is not a substitute for full input/output moderation or a dedicated security layer.
+- **No authentication:** Assumes a trusted internal tool. A production deployment would need auth (e.g. SSO, magic link, or Render private networking).
+- **Manual production seed:** After first Render deploy, seed data is applied via Shell (`npm run db:seed`) rather than an idempotent bootstrap step in the start command.
+- **Prisma env file:** Prisma CLI reads `.env`, not `.env.local`. For local dev, copy or symlink: `cp .env.local .env`.
+
+## What I would improve with more time
+
+1. **Review history UI** — Timeline of past reviews and expandable verbose run details (raw input/output) on the detail page.
+2. **Apply recommendation action** — Optional one-click “Apply AI suggestion” that maps `recommendation` → `status`, with confirmation.
+3. **Multi-campaign support** — Campaign selector on the dashboard and campaign-scoped filters.
+4. **Stronger agent ops** — Redis-backed rate limits, retry with backoff on transient LLM failures, structured logging/metrics on run outcomes.
+5. **Tests** — Integration tests for the review pipeline (mock LLM), API route tests, and a smoke E2E for dashboard → detail → review flow.
+6. **Richer grounding** — Include `manualNote` and prior review summaries in context when re-running; optional campaign brief uploads.
+7. **Deploy ergonomics** — Idempotent seed/migrate in CI or start script; staging environment with separate DB.
+
 ## Project layout
 
 ```

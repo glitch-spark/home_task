@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { listApplicationsQuerySchema } from "@/server/applications/application.validators";
 import { listApplications } from "@/server/applications/application.service";
-import { getDefaultCampaign } from "@/server/campaigns/campaign.service";
+import { getCampaignById, getDefaultCampaign } from "@/server/campaigns/campaign.service";
 import { jsonError, jsonOk } from "@/lib/api-response";
 import { handleRouteError } from "@/lib/errors";
 import type { ApplicationSortField, SortOrder } from "@/types/api";
@@ -24,15 +24,17 @@ export async function GET(request: Request) {
 
     let campaignId = parsed.data.campaignId;
     if (!campaignId) {
-      const campaign = await getDefaultCampaign();
-      if (!campaign) {
+      const defaultCampaign = await getDefaultCampaign();
+      if (!defaultCampaign) {
         return jsonError(
           "No campaign found. Run: npm run db:migrate:deploy && npm run db:seed",
           404
         );
       }
-      campaignId = campaign.id;
+      campaignId = defaultCampaign.id;
     }
+
+    const campaign = await getCampaignById(campaignId);
 
     const items = await listApplications({
       campaignId,
@@ -42,7 +44,19 @@ export async function GET(request: Request) {
       order: parsed.data.order as SortOrder | undefined,
     });
 
-    return jsonOk({ campaignId, applications: items });
+    return jsonOk({
+      campaignId,
+      campaign: campaign
+        ? {
+            id: campaign.id,
+            brandName: campaign.brandName,
+            campaignName: campaign.campaignName,
+            platforms: campaign.platforms,
+            budgetRange: campaign.budgetRange,
+          }
+        : null,
+      applications: items,
+    });
   } catch (error) {
     return handleRouteError(error);
   }

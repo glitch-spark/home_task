@@ -12,6 +12,11 @@ export type LatestReviewSummary = Pick<
   "id" | "fitScore" | "recommendation" | "createdAt"
 >;
 
+export type CampaignSummary = Pick<
+  Campaign,
+  "id" | "brandName" | "campaignName" | "platforms" | "budgetRange"
+>;
+
 export interface ApplicationListItem {
   id: string;
   creatorName: string;
